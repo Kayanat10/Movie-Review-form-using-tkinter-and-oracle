@@ -1,0 +1,154 @@
+Source Code :-
+
+import cx_Oracle as cs
+try:
+    conn = cs.connect('system','Password','orcl')
+    print("Database connection is successful")
+    cursor = conn.cursor()
+except:
+    print("Database connection failed")
+def oracle_select(sql):
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    print("search successful")
+    return result
+def oracle_insert(sql):
+    print("insert"+sql)
+    cursor.execute(sql)
+    conn.commit()
+    print("Insert successfully")
+import tkinter as tk
+import tkinter.messagebox
+import pickle
+import cx_Oracle as cs
+
+# Database Object
+
+# Window
+window = tk.Tk()
+window.title('Hello there, Rate your favourite movie now!!')
+window.geometry('600x600')
+window.configure(bg='light blue')
+
+
+
+
+# Label Moviename Ratings
+tk.Label(window,text='Movie Name :',bg='light blue',fg='black').place(x=100,y=150,height=30)
+tk.Label(window,text='Ratings (Out of ten,only aplhabets):',bg='light blue',fg='black').place(x=100,y=190,height=30)
+# Moviename input box
+var_mov_name = tk.StringVar()
+entry_mov_name = tk.Entry(window,textvariable=var_mov_name)
+entry_mov_name.place(x=320,y=150,width=200,height=30)
+# Ratings input box
+var_mov_rev = tk.StringVar()
+entry_mov_rev = tk.Entry(window,textvariable = var_mov_rev)
+entry_mov_rev.place(x=320,y=190,width=200,height=30)
+# Check function
+def usr_check_in():
+
+
+    # Input box to get moviename and review
+    mov_name = var_mov_name.get()
+    mov_rev = var_mov_rev.get()
+    #Get movie information from the database
+    sql = "select * from movi where mov_name='{}'".format(mov_name)
+    result = oracle_select(sql)
+    # Determine if there is a moviename
+    if(result!=[]):
+        # Determine whether the rate matches
+        if(result[0][1]==str(mov_rev)):
+            tk.messagebox.showinfo(title='Caution',message='Movie rated already!!')
+        else:
+            tk.messagebox.showerror(message='Enter a new movie name')
+    # Determine whether it is empty
+    elif mov_name=='' or mov_rev=='' :
+        tk.messagebox.showerror(message='Movie Name or Movie Ratings is empty')
+    else:
+        is_signup = tk.messagebox.askyesno('Welcome','You have not rated yet, do you want to rate now? ')
+        if is_signup:
+            usr_rate_up()
+
+
+#Rate new function
+def usr_rate_up():
+    def sign_to_oracle():
+        new_n = new_name.get()
+        new_r = new_rev.get()
+        new_r_c = new_rev_confirm.get()
+
+        sql_select = "select mov_name from movi where mov_name = '{}'".format(new_n)
+        sql_insert =  "insert into movi(mov_name,mov_rev) values('{}','{}')".format(new_n, new_r)
+
+        result = oracle_select(sql_select)
+        if(result==[]):
+            if(new_n=='' or new_r==''):
+                tk.messagebox.showerror('Error','Movie Name  or Movie Ratings is empty')
+            elif(new_r!=new_r_c):
+                tk.messagebox.showerror('Error','Movie Ratings  are inconsistent before and after')
+            else:
+                oracle_insert(sql_insert)
+                tk.messagebox.showinfo('Thank you','Ratings added succesfully')
+
+        # Rated successfully close the rating box
+                window_sign_up.destroy()
+
+        else:
+            tk.messagebox.showerror('Error','Movie already rated!')
+
+    # New rating page
+    window_sign_up = tk.Toplevel(window)
+    window_sign_up.geometry('500x500')
+    window_sign_up.title('Rate')
+    window_sign_up.configure(bg='light green')
+    
+    #Movie name variable and label, input box
+    new_name = tk.StringVar()
+    tk.Label(window_sign_up,text='Movie Name:',bg='light green',fg='black').place(x=10,y=10,height=30)
+    tk.Entry(window_sign_up,textvariable=new_name).place(x=220,y=10,height=30)
+    #Ratings variables and labels, input boxes
+    new_rev = tk.StringVar()
+    tk.Label(window_sign_up,text='Ratings (Out of ten,only aplhabets):',bg='light green',fg='black').place(x=10,y=50,height=30)
+    tk.Entry(window_sign_up,textvariable = new_rev).place(x=220,y=50,height=30)
+    #Repeat ratings variables and labels, input boxes
+    new_rev_confirm = tk.StringVar()
+    tk.Label(window_sign_up,text='Confirm Movie Rate:',bg='light green',fg='black').place(x=10,y=90,height=30)
+    tk.Entry(window_sign_up,textvariable=new_rev_confirm).place(x=220,y=90,height=30)
+    #Confirm ratings button and location
+    bt_confirm_sign_up = tk.Button(window_sign_up,text='Confirm review',command = sign_to_oracle,bg='green',fg='white')
+    bt_confirm_sign_up.place(x=150,y=130,height=30)
+    #Exit function
+
+def usr_mov_quit():
+    window.destroy()
+    conn.close()
+def fetch():
+    conn = cs.connect('system','Password','orcl')
+    sql_select_Query = "select * from movi"
+    cursor = conn.cursor()
+    cursor.execute(sql_select_Query)
+    records = cursor.fetchall()
+    print("Total number of rows in movi is: ", cursor.rowcount)
+
+    print("\nPrinting each movi record")
+    for row in records:
+        print("mov_name = ", row[0], )
+        print("mov_rev = ", row[1], )
+
+
+    
+# Check and Rate new button
+bt_log_in = tk.Button(window,text='Check',command=usr_check_in,bg = 'blue',fg='white').place(x=140,y=230,height=30)
+bt_sign_up = tk.Button(window,text='Rate New',command=usr_rate_up,bg = 'blue',fg='white').place(x=190,y=230,height=30)
+bt_fetch=tk.Button(window,text='Fetch',command=fetch,bg = 'blue',fg='white').place(x=280,y=230,height=30)
+bt_quit = tk.Button(window,text='Drop out',command=usr_mov_quit,bg = 'blue',fg='white').place(x=330,y=230,height=30)
+
+# Main loop
+window.mainloop()
+
+
+
+
+
+
+
